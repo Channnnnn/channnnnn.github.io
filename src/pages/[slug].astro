@@ -15,8 +15,8 @@ type Props = CollectionEntry<"posts">;
 const post = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(post);
 const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium', timeStyle: "short" });
-const createdDate = remarkPluginFrontmatter.createdDate
-const modifiedDate = remarkPluginFrontmatter.modifiedDate
+const createdDate = remarkPluginFrontmatter.created_at
+const modifiedDate = remarkPluginFrontmatter.updated_at
 console.debug(remarkPluginFrontmatter)
 ---
 

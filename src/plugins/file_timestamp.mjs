@@ -12,7 +12,7 @@ export function remarkFileInfo() {
     file.data.astro.frontmatter.author = authorName || '(pending)';
     file.data.astro.frontmatter.email = authorEmail || 'N/A';
     file.data.astro.frontmatter.mtime = fileInfo.mtime.toISOString();
-    file.data.astro.frontmatter.createdDate = new Date(created || fileInfo.mtime.toISOString());
-    file.data.astro.frontmatter.modifiedDate = new Date(latestChanges.toString() || fileInfo.mtime.toISOString());
+    file.data.astro.frontmatter.created_at = new Date(created || fileInfo.mtime.toISOString());
+    file.data.astro.frontmatter.updated_at = new Date(latestChanges.toString() || fileInfo.mtime.toISOString());
   };
 }
