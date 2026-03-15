@@ -1,7 +1,7 @@
 ---
 title: First blog post
 thumbnail: /media/20220515_143441-2.jpg
-draft: false
+draft: true
 ---
 
 Hello from the astro side
