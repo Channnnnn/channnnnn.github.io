@@ -1,4 +1,6 @@
 ---
+/// <reference path="../../.astro/content.d.ts" />
+//@ts-check
 import { type CollectionEntry, getCollection, render } from "astro:content";
 
 import CommonLayout from "../layouts/Common.astro";
@@ -12,11 +14,11 @@ export async function getStaticPaths() {
       props: post,
     }));
 }
-type Props = CollectionEntry<"posts">;
+type Props = CollectionEntry<"posts"> & { frontmatter: any };
 
 const post = Astro.props;
-post.frontmatter = post.rendered.metadata.frontmatter
-const { Content } = await render(post);
+const { Content, remarkPluginFrontmatter } = await render(post);
+post.frontmatter = remarkPluginFrontmatter
 const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
 const fullDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium', timeStyle: "short" });
 const createdDate = post.frontmatter.created_at

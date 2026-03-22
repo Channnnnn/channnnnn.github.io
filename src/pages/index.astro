@@ -1,13 +1,16 @@
 ---
-import { getCollection } from "astro:content"
+import { type CollectionEntry, getCollection, render } from "astro:content"
 
 import Card from "../components/Card.astro";
 import CommonLayout from "../layouts/Common.astro";
 import { getInitials } from '../static/script.mjs';
 
-const posts = await getCollection("posts");
+type Props = CollectionEntry<"posts"> & { frontmatter: Record<string, any> };
+
+const posts: Props[] = await getCollection("posts");
 for (const post of posts) {
-	post.frontmatter = post.rendered.metadata.frontmatter;
+    const { remarkPluginFrontmatter } = await render(post);
+		post.frontmatter = remarkPluginFrontmatter;
 }
 const renderPosts = import.meta.env.DEV 
 	? posts
