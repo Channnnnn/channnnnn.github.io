@@ -1,38 +1,65 @@
 ---
 import { getCollection } from "astro:content"
 
+import CommonLayout from "../layouts/Common.astro";
+import { getInitials } from '../static/script.mjs';
 
 const posts = await getCollection("posts");
+for (const post of posts) {
+	post.frontmatter = post.rendered.metadata.frontmatter;
+}
+const renderPosts = import.meta.env.DEV 
+	? posts
+	: posts.filter(({frontmatter}) => !frontmatter.draft)
 
+const sortedPosts = renderPosts.sort(({frontmatter: post1}, {frontmatter: post2}) => 
+	  new Date(post1.created_at) > new Date(post2.created_at) ? -1 
+	: new Date(post1.created_at) < new Date(post2.created_at) ? 1 
+	: 0)
+const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
+const [latestArticle, ...recentArticles] = sortedPosts.slice(0, 4)
+const latestAuthor = latestArticle.data.author || latestArticle.frontmatter.author
+
+const latestArticleExcerpt = latestArticle.frontmatter.description.length > 175 ? latestArticle.frontmatter.description.slice(0,175) + "..." : latestArticle.frontmatter.description
+const latestArticleReadMore = latestArticleExcerpt.length < 30 ? 'Say what?'
+: latestArticleExcerpt.length > 150 ? 'Continue reading'
+: 'Read article'
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro with SveltiaCMS</h1>
-		<a href="/blog/cms">Go to CMS</a>
+<CommonLayout>
+	<!-- ══════════════ ARTICLE LIST PAGE ══════════════ -->
+	<section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Latest Article · {latestArticle.frontmatter.category}</div>
+      <h1>{latestArticle.frontmatter.title}</h1>
+      <div class="hero-meta">
+        <div class="author-avatar">{getInitials(latestAuthor)}</div>
+        <span>{latestAuthor}</span>
+        <span>·</span>
+        <span>{shortDateFormatter.format(latestArticle.frontmatter.created_at)}</span>
+        <span>·</span>
+        <span>{latestArticle.frontmatter.minutesRead}</span>
+      </div>
+      <p class="hero-excerpt">
+        {latestArticleExcerpt}
+      </p>
+      <a href={'blog/' + latestArticle.id} class="btn-read">
+        {latestArticleReadMore}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+		{ latestArticle.frontmatter.thumbnail
+			?
+    	<div class="hero-image">
+				<img src={latestArticle.frontmatter.thumbnail?.src || latestArticle.frontmatter.thumbnail} onerror="this.style.display='none'" />
+    	</div>
+			: 
+			<div class="hero-decoration">
+				{/* TODO: Add static image of category */}
+			</div>
+		}
+  </section>
 
-		<section>
-			<h2>Blog Posts</h2>
-			<ul>
-				{
-					posts.map(({ id, data: post }) => (
-						<li>
-							<a href={`/blog/${id}`}>
-								{post.title}
-							</a>
-						</li>
-					))
-				}
-			</ul>
-		</section>
-
-	</body>
-</html>
+</CommonLayout>
