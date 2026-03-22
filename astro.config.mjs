@@ -5,6 +5,9 @@ import { transformerCopyButton } from '@selemondev/shiki-transformer-copy-button
 
 import sveltia from "astro-loader-sveltia-cms";
 import { remarkFileInfo } from './src/plugins/file_timestamp.mjs';
+import { remarkReadingTime } from './src/plugins/markdown_readtime.mjs';
+import { remarkDescription } from './src/plugins/markdown_autodescription.mjs';
+
 
 // https://astro.build/config
 export default defineConfig({
@@ -20,7 +23,7 @@ export default defineConfig({
     layout: 'constrained',
   },
   markdown: {
-    remarkPlugins: [remarkFileInfo],
+    remarkPlugins: [remarkFileInfo, remarkReadingTime, remarkDescription],
     shikiConfig: {
       theme: 'material-theme',
       wrap: false,
