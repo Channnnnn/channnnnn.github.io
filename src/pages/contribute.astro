@@ -249,7 +249,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
         border-bottom: 1px solid #c3dcc0;
         padding: 0.6rem 2rem;
         display: none;
-        gap: 1.5rem;
+        gap: 0 1.5rem;
         flex-wrap: wrap;
         font-size: 0.78rem;
         color: var(--accent);
@@ -385,7 +385,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
     </div>
 
     <!-- ══════════════ PREVIEW SCREEN ══════════════ -->
-    <div id="preview-screen">
+    <div id="preview-screen" style="display: unset;">
       <div class="preview-toolbar">
         <div class="preview-toolbar-left">
           <button class="btn-back" id="btn-back"> ← Back </button>
@@ -413,19 +413,18 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
         <!-- Tags from frontmatter -->
         <div class="tag-list" id="tag-list"></div>
 
-        <section>
-          Ready to contribute? Submit your article at &curlyeqprec;Github Repo / Pull request&curlyeqsucc;.
-          Don't for get to include all frontmatter attributres!
-          <Code code={
-`
----
-title: First blog post
-thumbnail: /media/20220515_143441-2.jpg
-category: Journal
-tags: ["Astro", "Shiki", "Tooling"]
----
-`} lang="md">
-        </section>
+      </div>
+      <div class="contribution-strip">
+        <div class="contribution-inner" style="grid-template-columns: 2fr 3fr;">
+          <h1>Looks good?</h1>
+          <div>
+            <p style="margin-bottom: 1rem">
+              Submit your article at [Github Repo / Pull request].<br/>
+              Don't for get to include all frontmatter attributes!<br/>
+            </p>
+            <code>title・author・thumbnail・category・tags</code>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -617,7 +616,7 @@ tags: ["Astro", "Shiki", "Tooling"]
           .filter((k) => fm[k])
           .map(
             (k) =>
-              `<div class="fm-item"><span class="fm-key">${k}:</span><span class="fm-val">${fm[k]}</span></div>`,
+              `<div class="fm-item"><span class="fm-key">${k}:</span><span class="fm-val" title="${fm[k]}">${fm[k]}</span></div>`,
           )
           .join("");
         if (fmItems) {
