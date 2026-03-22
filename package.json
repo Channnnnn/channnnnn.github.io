@@ -9,6 +9,8 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@selemondev/shiki-transformer-copy-button": "^1.1.0",
+    "@shikijs/transformers": "^4.0.2",
     "astro-loader-sveltia-cms": "^0.1.3"
   },
   "engines": {
