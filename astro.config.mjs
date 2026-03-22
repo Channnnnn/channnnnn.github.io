@@ -45,10 +45,9 @@ export default defineConfig({
             fields: [
               { label: "Title", name: "title", widget: "string" },
               { label: "Mark as Draft", name: "draft", widget: "boolean", required: false, comment: "Set to draft will hide/unpublish the post" },
-              { name: "created_at", widget: "hidden", picker_utc: false, required: false, default: "{{now}}", readonly: true, preview: false },
-              { name: "updated_at", widget: "hidden", picker_utc: false, required: false, readonly: true, preview: false },
               { name: "author", widget: "hidden", default: "(you)", required: false, readonly: true, preview: false },
-              { label: "Feature Image", name: "thumbnail", widget: "image" },
+              { label: "Topic", name: "category", widget: "string" },
+              { label: "Feature Image", name: "thumbnail", widget: "image", required: false },
               { label: "Body", name: "body", widget: "markdown" },
             ],
           },

@@ -1,6 +1,7 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
 
+import { getInitials } from '../static/script.mjs';
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -13,21 +14,129 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<"posts">;
 
 const post = Astro.props;
-const { Content, remarkPluginFrontmatter } = await render(post);
-const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium', timeStyle: "short" });
-const createdDate = remarkPluginFrontmatter.created_at
-const modifiedDate = remarkPluginFrontmatter.updated_at
-console.debug(remarkPluginFrontmatter)
+post.frontmatter = post.rendered.metadata.frontmatter
+const { Content } = await render(post);
+const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
+const fullDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium', timeStyle: "short" });
+const createdDate = post.frontmatter.created_at
+const modifiedDate = post.frontmatter.updated_at
+
+const author = post.data.author || post.frontmatter.author
+const category = post.frontmatter.category || "";
+const tags = post.frontmatter.tags || [];
+const thumbnail = post.frontmatter.thumbnail?.src || post.frontmatter.thumbnail;
+const thumbnailStyle = !!thumbnail ? `--bg-image: url(${thumbnail})` : 'display: none;'
 ---
 
-<h1>{post.data.title}</h1>
-<div title={remarkPluginFrontmatter.email}>Author: {remarkPluginFrontmatter.author}</div>
-<time>Publish Date: {dateFormatter.format(createdDate)}</time>
-{ 
-(modifiedDate > createdDate) && 
-<time><em>Updated Date: {dateFormatter.format(modifiedDate || createdDate)}</em></time>
-}
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{"Knowledge Base · Mycostech"}</title>
 
-<div class="content-container">
-  <Content />
-</div>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Global styles: link your blog-template CSS here -->
+    <!-- <link rel="stylesheet" href="/styles/global.css" /> -->
+    <link rel="stylesheet" href="/blog/code.css" />
+    <slot name="head-style" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="#" class="site-logo">Knowledge Base</a>
+        <nav class="site-nav">
+          <a href="#">About</a>
+          <a href="#">Articles</a>
+          <a href="#">Topics</a>
+          <a href="#" class="nav-cta">Contribute</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ══════════════ ARTICLE PAGE ══════════════ -->
+    <div class="page-article">
+      { !import.meta.env.DEV && post.frontmatter.draft 
+      ?
+      <div class="center-title">
+        <div class="hero">
+          <h1>Nothing to see here.</h1>
+          <div class="hero-eyebrow">404 Not Found</div> 
+        </div>
+        <a class="tab-btn active" onclick="history.back();">← Go back</a>
+      </div>
+      : 
+      <div class="article-thumbnails" style={thumbnailStyle}></div>
+      <div class="article-wrap">
+        <div class:list={["article-header", { "article-draft": post.frontmatter.draft }]}>
+          <div class="breadcrumb">
+            <a href="#">Articles</a>
+            <span>/</span>
+            <a href="#">{category || '(Misc)'}</a>
+            <span>/</span>
+            <span>{post.frontmatter.title}</span>
+          </div>
+
+
+          <a href="#" class="post-category">{category || 'Miscellaneous'}</a>
+
+          <h1>{post.frontmatter.title}</h1>
+        </div>
+
+        <div class="article-byline">
+          <div class="byline-avatar">{getInitials(author)}</div>
+          <div class="byline-info">
+            <div title={post.frontmatter.email} class="byline-name" >{author}</div>
+            <div class="byline-date">
+              <time title={createdDate}>{shortDateFormatter.format(createdDate)}</time>
+              { 
+              (modifiedDate > createdDate) && 
+              <time title={modifiedDate || createdDate}><em>(Updated: {fullDateFormatter.format(modifiedDate || createdDate)})</em></time>
+              }
+            </div>
+          </div>
+          <div class="byline-reading">{post.frontmatter.minutesRead}</div>
+        </div>
+
+        <div class="article-body">
+          <Content />
+        </div>
+
+      </div>
+      }
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="site-logo"
+            >Knowledge <span style="color:var(--accent)">Base</span></a
+          >
+          <p>
+            Explainer, Gotchas, Article, Showcase, etc. in <code>.md</code>
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© {new Date().getFullYear()} Mycostech Knowledge Base.</span>
+        <span
+          >Built with <a href="https://astro.build">Astro</a> + <a
+            href="https://sveltia.com">Sveltia CMS</a
+          ></span
+        >
+      </div>
+    </footer>
+  </body>
+</html>
