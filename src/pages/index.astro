@@ -1,38 +1,137 @@
 ---
-import { getCollection } from "astro:content"
+import { type CollectionEntry, getCollection, render } from "astro:content"
 
+import Card from "../components/Card.astro";
+import CommonLayout from "../layouts/Common.astro";
+import { getInitials } from '../static/script.mjs';
 
-const posts = await getCollection("posts");
+type Props = CollectionEntry<"posts"> & { frontmatter: Record<string, any> };
 
+const posts: Props[] = await getCollection("posts");
+for (const post of posts) {
+    const { remarkPluginFrontmatter } = await render(post);
+		post.frontmatter = remarkPluginFrontmatter;
+}
+const renderPosts = import.meta.env.DEV 
+	? posts
+	: posts.filter(({frontmatter}) => !frontmatter.draft)
+
+const sortedPosts = renderPosts.sort(({frontmatter: post1}, {frontmatter: post2}) => 
+	  new Date(post1.created_at) > new Date(post2.created_at) ? -1 
+	: new Date(post1.created_at) < new Date(post2.created_at) ? 1 
+	: 0)
+const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
+const [latestArticle, ...recentArticles] = sortedPosts.slice(0, 4)
+const latestAuthor = latestArticle.data.author || latestArticle.frontmatter.author
+
+const latestArticleExcerpt = latestArticle.frontmatter.description.length > 175 ? latestArticle.frontmatter.description.slice(0,175) + "..." : latestArticle.frontmatter.description
+const latestArticleReadMore = latestArticleExcerpt.length < 30 ? 'Say what?'
+: latestArticleExcerpt.length > 150 ? 'Continue reading'
+: 'Read article'
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro with SveltiaCMS</h1>
-		<a href="/cms">Go to CMS</a>
+<CommonLayout>
+	<!-- ══════════════ ARTICLE LIST PAGE ══════════════ -->
+	<section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Latest Article · {latestArticle.frontmatter.category}</div>
+      <h1>{latestArticle.frontmatter.title}</h1>
+      <div class="hero-meta">
+        <div class="author-avatar">{getInitials(latestAuthor)}</div>
+        <span>{latestAuthor}</span>
+        <span>·</span>
+        <span>{shortDateFormatter.format(latestArticle.frontmatter.created_at)}</span>
+        <span>·</span>
+        <span>{latestArticle.frontmatter.minutesRead}</span>
+      </div>
+      <p class="hero-excerpt">
+        {latestArticleExcerpt}
+      </p>
+      <a href={'blog/' + latestArticle.id} class="btn-read">
+        {latestArticleReadMore}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+		{ latestArticle.frontmatter.thumbnail
+			?
+    	<div class="hero-image">
+				<img src={latestArticle.frontmatter.thumbnail?.src || latestArticle.frontmatter.thumbnail} onerror="this.style.display='none'" />
+    	</div>
+			: 
+			<div class="hero-decoration">
+				{/* TODO: Add static image of category */}
+			</div>
+		}
+  </section>
 
-		<section>
-			<h2>Blog Posts</h2>
-			<ul>
-				{
-					posts.map(({ id, data: post }) => (
-						<li>
-							<a href={`/blog/${id}`}>
-								{post.title}
-							</a>
-						</li>
-					))
-				}
-			</ul>
-		</section>
+	<div class="section-divider"><hr></div>
 
-	</body>
-</html>
+	<!-- RECENT POSTS -->
+  <div class="section-label">
+    <h2>Recent articles</h2>
+    <a href="#">View all →</a>
+  </div>
+
+	<div class="post-grid">
+		{recentArticles.map(post => <Card {...post} />)}
+  </div>
+
+	<div class="section-divider"><hr></div>
+
+	<!-- Dev Notes (Announcement, Feature Updates, section for maintainers) -->
+  <div class="section-label">
+    <h2>Dev Notes</h2>
+  </div>
+
+  <div class="featured-row">
+    <div class="featured-card">
+      <div class="featured-card-number">01</div>
+      <div class="featured-card-body">
+        <a href="#" class="post-category">Culture</a>
+        <h3><a href="#">Reading Slowly in a World Designed for Speed</a></h3>
+        <p>There is a radical act hidden inside every unrushed page turn — a refusal to be consumed by the velocity of now.</p>
+      </div>
+    </div>
+    <div class="featured-card">
+      <div class="featured-card-number">02</div>
+      <div class="featured-card-body">
+        <a href="#" class="post-category">Technology</a>
+        <h3><a href="#">What It Means to Think Alongside a Machine</a></h3>
+        <p>The question is not whether AI can reason — it is what changes in us when we outsource the friction of thinking.</p>
+      </div>
+    </div>
+    <div class="featured-card">
+      <div class="featured-card-number">03</div>
+      <div class="featured-card-body">
+        <a href="#" class="post-category">Philosophy</a>
+        <h3><a href="#">The Ethics of Changing Your Mind in Public</a></h3>
+        <p>We punish people for evolving and celebrate consistency. This is backward — and it is making us all a little more dishonest.</p>
+      </div>
+    </div>
+    <div class="featured-card">
+      <div class="featured-card-number">04</div>
+      <div class="featured-card-body">
+        <a href="#" class="post-category">Writing</a>
+        <h3><a href="#">Why Every Writer Needs a Commonplace Book</a></h3>
+        <p>Before the algorithm, there was the commonplace book: a private library of fragments, quotations, and half-formed thoughts.</p>
+      </div>
+    </div>
+  </div>
+
+	<!-- Contribution -->
+  <div class="contribution-strip">
+    <div class="contribution-inner">
+      <h1>Ready to Contribute?</h1>
+      <div>
+				<p style="margin-bottom: 1rem">Your recent findings, Lesson learned, Cool tricks. Anything worth sharing.</p>
+				<div class="contribution-form">
+					<a class="tab-btn contribute" href="/blog/contribute">Contribute</a>
+					<a class="tab-btn" href="/blog/dev-notes/contribution-guide">How to</a>
+				</div>
+			</div>
+    </div>
+  </div>
+
+</CommonLayout>

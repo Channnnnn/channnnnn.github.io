@@ -1,0 +1,717 @@
+---
+// import { type CollectionEntry, getCollection, render } from "astro:content";
+import { Code } from 'astro:components';
+
+import CommonLayout from "../layouts/Common.astro";
+
+const post = Astro.props;
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+});
+
+---
+
+<CommonLayout nofooter={true}>
+    <style slot="head-style">
+      /* ── UPLOAD SCREEN ── */
+
+      .upload-eyebrow {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .upload-eyebrow::before,
+      .upload-eyebrow::after {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 1px;
+        background: var(--accent);
+      }
+
+      #upload-screen h1 {
+        font-family: var(--serif);
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.75rem;
+      }
+
+      #upload-screen p {
+        color: var(--muted);
+        font-size: 0.9375rem;
+        line-height: 1.7;
+        margin-bottom: 3rem;
+      }
+
+      /* Drop zone */
+      .drop-zone {
+        border: 1.5px dashed var(--border);
+        border-radius: 4px;
+        padding: 3rem 2rem;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        position: relative;
+        background: var(--bg);
+      }
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        border-color: var(--accent);
+        background: var(--accent-light);
+      }
+      .drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+
+      .drop-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 1rem;
+        color: var(--border);
+      }
+      .drop-zone:hover .drop-icon,
+      .drop-zone.drag-over .drop-icon {
+        color: var(--accent);
+      }
+
+      .drop-label {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 0.35rem;
+      }
+      .drop-sub {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .file-selected {
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        display: none;
+      }
+      .file-selected.visible {
+        display: flex;
+      }
+      .file-name {
+        font-weight: 500;
+        color: var(--text);
+      }
+      .file-size {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .btn-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+        padding: 0.75rem 2rem;
+        background: var(--text);
+        color: var(--bg);
+        font-family: var(--sans);
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        transition: background 0.15s;
+        width: 100%;
+        justify-content: center;
+      }
+      .btn-preview:hover {
+        background: var(--accent);
+      }
+      .btn-preview:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn-preview:disabled:hover {
+        background: var(--text);
+      }
+
+      /* Loading state */
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Error banner */
+      .error-banner {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: #fcebeb;
+        border: 1px solid #f09595;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #a32d2d;
+        text-align: left;
+      }
+      .error-banner.visible {
+        display: block;
+      }
+
+      /* ── PREVIEW SCREEN ── */
+      #preview-screen {
+        display: none;
+      }
+      #preview-screen.visible {
+        display: block;
+      }
+
+      /* Preview toolbar */
+      .preview-toolbar {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0.75rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        position: sticky;
+        top: 64px;
+        z-index: 90;
+      }
+      .preview-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .preview-filename {
+        font-family: var(--code-font);
+        font-size: 0.78rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        padding: 0.2rem 0.6rem;
+        color: var(--text);
+      }
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--sans);
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--muted);
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        padding: 0.35rem 0.85rem;
+        cursor: pointer;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      .btn-back:hover {
+        color: var(--text);
+        border-color: var(--text);
+      }
+
+      /* Frontmatter meta strip */
+      .fm-strip {
+        background: var(--accent-light);
+        border-bottom: 1px solid #c3dcc0;
+        padding: 0.6rem 2rem;
+        display: none;
+        gap: 0 1.5rem;
+        flex-wrap: wrap;
+        font-size: 0.78rem;
+        color: var(--accent);
+      }
+      .fm-strip.visible {
+        display: flex;
+      }
+      .fm-item {
+        display: flex;
+        gap: 0.35rem;
+      }
+      .fm-key {
+        opacity: 0.7;
+      }
+      .fm-val {
+        font-weight: 500;
+      }
+
+      /* Article layout */
+      .article-wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 4rem 2rem 6rem;
+      }
+
+      /* Article byline (populated from frontmatter) */
+      .article-byline {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 0;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 2.5rem;
+      }
+      .byline-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-light);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .byline-info {
+        flex-grow: 1;
+      }
+      .byline-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.15rem;
+      }
+      .byline-date {
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .byline-reading {
+        font-size: 0.78rem;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .post-category {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        text-decoration: none;
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      .article-thumbnails {
+        outline: 1px dashed var(--muted);
+      }
+      .article-thumbnails::after {
+        content: '(Your thumbnail, SOON™)';
+        animation-duration: 3s;
+      }
+    </style>
+
+    <!-- ══════════════ UPLOAD SCREEN ══════════════ -->
+    <div id="upload-screen" class="center-title">
+      <div class="upload-eyebrow">Post Preview</div>
+      <h1>Preview your post</h1>
+      <p>
+        Upload any Markdown file. Frontmatter is parsed automatically and code
+        blocks are syntax-highlighted client-side via Shiki.
+      </p>
+
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".md,.mdx" />
+        <svg class="drop-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="10" width="36" height="28" rx="3" stroke="currentColor"
+            stroke-width="1.5"></rect>
+          <path d="M16 22h16M16 28h10" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round"></path>
+          <path d="M24 6v8M21 9l3-3 3 3" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+        <div class="drop-label">Drop your .md or .mdx file here</div>
+        <div class="drop-sub">or click to browse</div>
+      </div>
+
+      <div class="file-selected" id="file-selected">
+        <div>
+          <div class="file-name" id="file-name-display">—</div>
+          <div class="file-size" id="file-size-display">—</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M3 8l3.5 3.5L13 4.5"
+            stroke="#3D6B35"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </div>
+
+      <div class="error-banner" id="error-banner"></div>
+
+      <button class="btn-preview" id="btn-preview" disabled>
+        <span class="spinner" id="spinner"></span>
+        <span id="btn-label">Preview post</span>
+      </button>
+    </div>
+
+    <!-- ══════════════ PREVIEW SCREEN ══════════════ -->
+    <div id="preview-screen" style="display: unset;">
+      <div class="preview-toolbar">
+        <div class="preview-toolbar-left">
+          <button class="btn-back" id="btn-back"> ← Back </button>
+          <span>Previewing</span>
+          <span class="preview-filename" id="preview-filename">—</span>
+        </div>
+        <div
+          style="font-size:0.78rem;color:var(--muted)"
+          id="word-count-label"
+        >
+        </div>
+      </div>
+
+      <!-- Frontmatter strip -->
+      <div class="fm-strip" id="fm-strip"></div>
+
+      <div class="article-thumbnails" id="article-thumbnails"></div>
+      <div class="article-wrap">
+        <!-- Populated from frontmatter -->
+        <div class="article-header" id="article-header"></div>
+
+        <!-- Rendered markdown content -->
+        <div class="article-body" id="article-body"></div>
+
+        <!-- Tags from frontmatter -->
+        <div class="tag-list" id="tag-list"></div>
+
+      </div>
+      <div class="contribution-strip">
+        <div class="contribution-inner" style="grid-template-columns: 2fr 3fr;">
+          <h1>Looks good?</h1>
+          <div>
+            <p style="margin-bottom: 1rem">
+              Submit your article at [Github Repo / Pull request].<br/>
+              Don't for get to include all frontmatter attributes!<br/>
+            </p>
+            <code>title・author・thumbnail・category・tags</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" is:inline>
+      import markedShiki from "https://esm.sh/marked-shiki";
+      import { codeToHtml } from "https://esm.sh/shiki@1";
+      import { transformerNotationDiff, transformerNotationHighlight } from "https://esm.sh/@shikijs/transformers";
+      import { transformerCopyButton } from 'https://esm.sh/@selemondev/shiki-transformer-copy-button'
+      import { marked } from "https://esm.sh/marked@12";
+      import { getInitials } from '/blog/script.mjs';
+
+      // ── STATE ──
+      let selectedFile = null;
+
+      // ── ELEMENTS ──
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("file-input");
+      const fileSelected = document.getElementById("file-selected");
+      const fileNameDisplay = document.getElementById("file-name-display");
+      const fileSizeDisplay = document.getElementById("file-size-display");
+      const btnPreview = document.getElementById("btn-preview");
+      const btnLabel = document.getElementById("btn-label");
+      const spinner = document.getElementById("spinner");
+      const errorBanner = document.getElementById("error-banner");
+      const uploadScreen = document.getElementById("upload-screen");
+      const previewScreen = document.getElementById("preview-screen");
+      const btnBack = document.getElementById("btn-back");
+      const previewFilename = document.getElementById("preview-filename");
+      const wordCountLabel = document.getElementById("word-count-label");
+      const articleThumbnails = document.getElementById("article-thumbnails");
+      const articleHeader = document.getElementById("article-header");
+      const articleBody = document.getElementById("article-body");
+      const tagList = document.getElementById("tag-list");
+      const fmStrip = document.getElementById("fm-strip");
+
+      // ── DRAG & DROP ──
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("drag-over"),
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+      });
+
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+        else if (fileInput.files.length === 0) {
+          fileNameDisplay.textContent = '';
+          fileSizeDisplay.textContent = '';
+          fileSelected.classList.remove("visible");
+          btnPreview.disabled = true;
+        }
+      });
+
+      function handleFile(file) {
+        if (!file.name.match(/\.(md|mdx)$/i)) {
+          showError("Only .md and .mdx files are supported.");
+          return;
+        }
+        hideError();
+        selectedFile = file;
+
+        fileNameDisplay.textContent = file.name;
+        fileSizeDisplay.textContent = formatBytes(file.size);
+        fileSelected.classList.add("visible");
+        btnPreview.disabled = false;
+      }
+
+      // ── PREVIEW ──
+      btnPreview.addEventListener("click", async () => {
+        if (!selectedFile) return;
+        setLoading(true);
+        hideError();
+
+        try {
+          const raw = await readFile(selectedFile);
+          const { frontmatter, body } = parseFrontmatter(raw);
+          const html = await renderMarkdown(body);
+
+          buildPreview(frontmatter, html, selectedFile.name, body);
+          uploadScreen.style.display = "none";
+          previewScreen.classList.add("visible");
+          window.scrollTo({ top: 0 });
+        } catch (err) {
+          fileInput.value = ''
+          fileInput.dispatchEvent(new Event('change'))
+          if (err.cause.name === 'NotReadableError') 
+            showError("Failed to render file: Selected file has been modified. Try upload again.");
+          else
+            showError("Failed to render file: " + err.message);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      btnBack.addEventListener("click", () => {
+        previewScreen.classList.remove("visible");
+        uploadScreen.style.display = "";
+        articleBody.innerHTML = "";
+        articleThumbnails.style = "";
+        articleHeader.innerHTML = "";
+        tagList.innerHTML = "";
+        fmStrip.classList.remove("visible");
+        fmStrip.innerHTML = "";
+      });
+
+      // ── FRONTMATTER PARSER ──
+      function parseFrontmatter(raw) {
+        const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+        if (!match) return { frontmatter: {}, body: raw };
+
+        const yamlBlock = match[1];
+        const body = match[2];
+        const frontmatter = {};
+
+        for (const line of yamlBlock.split("\n")) {
+          const colonIdx = line.indexOf(":");
+          if (colonIdx === -1) continue;
+          const key = line.slice(0, colonIdx).trim();
+          let val = line.slice(colonIdx + 1).trim();
+
+          // Strip quotes
+          if (
+            (val.startsWith('"') && val.endsWith('"')) ||
+            (val.startsWith("'") && val.endsWith("'"))
+          ) {
+            val = val.slice(1, -1);
+          }
+
+          // Parse array: [a, b, c] or ["a", "b"]
+          if (val.startsWith("[") && val.endsWith("]")) {
+            val = val
+              .slice(1, -1)
+              .split(",")
+              .map((v) => v.trim().replace(/^["']|["']$/g, ""))
+              .filter(Boolean);
+          }
+
+          frontmatter[key] = val;
+        }
+
+        return { frontmatter, body };
+      }
+
+      // ── MARKDOWN RENDERER ──
+      async function renderMarkdown(md) {
+        marked.use(markedShiki({
+          async highlight(code, lang) {
+            return await codeToHtml(code, {
+              theme: 'material-theme',
+              wrap: false,
+              lang,
+              transformers: [
+                transformerNotationDiff({ matchAlgorithm: 'v3' }),
+                transformerNotationHighlight({ matchAlgorithm: 'v3' }),
+                transformerCopyButton({
+                  duration: 2000,
+                  display: 'ready',
+                  successIcon: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='rgba(128,128,128,1)' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Crect width='8' height='4' x='8' y='2' rx='1' ry='1'/%3E%3Cpath d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/%3E%3Cpath d='m9 14 2 2 4-4'/%3E%3C/svg%3E`,
+                  copyIcon: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='rgba(128,128,128,1)' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Crect width='8' height='4' x='8' y='2' rx='1' ry='1'/%3E%3Cpath d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/%3E%3Cpath d='m8 10 8 0 M 8 14h 8 M 8 18 h8'/%3E%3C/svg%3E`,
+                }),
+              ],
+            })
+          },
+        }));
+        return await marked.parse(md);
+      }
+
+      // ── BUILD PREVIEW ──
+      function buildPreview(fm, html, filename, rawBody) {
+        previewFilename.textContent = filename;
+
+        // Word count & reading time
+        const words = rawBody.trim().split(/\s+/).length;
+        const mins = Math.max(1, Math.round(words / 200));
+        wordCountLabel.textContent = `${words.toLocaleString()} words · ~${mins} min read`;
+
+        // Frontmatter meta strip
+        fm.created_at = new Date().toDateString()
+
+        const fmKeys = ["author", "created_at", "thumbnail", "category", "title"];
+        const fmItems = fmKeys
+          .filter((k) => fm[k])
+          .map(
+            (k) =>
+              `<div class="fm-item"><span class="fm-key">${k}:</span><span class="fm-val" title="${fm[k]}">${fm[k]}</span></div>`,
+          )
+          .join("");
+        if (fmItems) {
+          fmStrip.innerHTML = fmItems;
+          fmStrip.classList.add("visible");
+        }
+
+        // Article meta (category + title + byline)
+        const category = fm.category || fm.tags?.[0] || "";
+        const title = fm.title || "";
+        const author = fm.author || "(You)";
+        const initials = getInitials(author);
+        const created_at = fm.created_at || fm.date || "";
+        const formattedDate = created_at
+          ? new Date(created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "";
+
+        let metaHTML = "";
+        if (category)
+          metaHTML += `<span class="post-category">${category}</span>`;
+        if (title)
+          metaHTML += `<h1>${title}</h1>`;
+
+        if (author || formattedDate) {
+          metaHTML += `
+            <div class="article-byline">
+              <div class="byline-avatar">${initials}</div>
+              <div class="byline-info">
+                ${author ? `<div class="byline-name">${author}</div>` : ""}
+                ${formattedDate ? `<div class="byline-date">${formattedDate}</div>` : ""}
+              </div>
+              <div class="byline-reading">${mins} min read</div>
+            </div>`;
+        }
+        if (fm.thumbnail) {
+            articleThumbnails.style = `--bg-image: url(${fm.thumbnail.src || fm.thumbnail})`
+        }
+        else {
+          articleThumbnails.style = 'display:none;'
+        }
+
+        articleHeader.innerHTML = metaHTML;
+
+        // Article body
+        // If frontmatter had a title, strip the first <h1> from rendered body to avoid duplicate
+        let bodyHTML = html;
+        if (title) bodyHTML = bodyHTML.replace(/<h1[^>]*>.*?<\/h1>/i, "");
+        articleBody.innerHTML = bodyHTML;
+
+        // Tags
+        const tags = Array.isArray(fm.tags)
+          ? fm.tags
+          : fm.tags
+            ? [fm.tags]
+            : [];
+        if (tags.length) {
+          tagList.innerHTML = tags
+            .map((t) => `<span class="tag">${t}</span>`)
+            .join("");
+        }
+      }
+
+      // ── UTILS ──
+      function readFile(file) {
+        return new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = (e) => res(e.target.result);
+          r.onerror = (e) => rej(new Error("Could not read file. Try to upload again.", { cause: e.target.error }))
+          r.readAsText(file, "UTF-8");
+        });
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+      }
+
+      function setLoading(on) {
+        btnPreview.disabled = on;
+        spinner.style.display = on ? "block" : "none";
+        btnLabel.textContent = on ? "Rendering…" : "Preview post";
+      }
+
+      function showError(msg) {
+        errorBanner.textContent = msg;
+        errorBanner.classList.add("visible");
+      }
+
+      function hideError() {
+        errorBanner.classList.remove("visible");
+      }
+    </script>
+</CommonLayout>

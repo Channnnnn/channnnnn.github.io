@@ -1,0 +1,162 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+
+import CommonLayout from "../layouts/Common.astro";
+type Props = CollectionEntry<"posts"> & {
+  frontmatter: Record<string, any>;
+  author: string;
+};
+
+const posts: Props[] = await getCollection("posts");
+for (const post of posts) {
+  const { remarkPluginFrontmatter } = await render(post);
+  post.frontmatter = remarkPluginFrontmatter;
+  post.author = post.data.author || post.frontmatter.author;
+}
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+});
+
+const renderPosts: any[] = import.meta.env.DEV
+  ? posts
+  : posts.filter(({ frontmatter }) => !frontmatter.draft);
+
+const sortDateDesc = (input) =>
+  input.sort(({ frontmatter: post1 }, { frontmatter: post2 }) =>
+    new Date(post1.created_at) > new Date(post2.created_at) ? -1
+      : new Date(post1.created_at) < new Date(post2.created_at) ? 1
+      : 0,
+  );
+
+const sortedDatePosts = sortDateDesc(renderPosts);
+const groupedByAuthors = Map.groupBy(renderPosts, (p: any) => p.author);
+const groupedByTopic = Map.groupBy(
+  renderPosts,
+  (p: any) => p.frontmatter.category || "(Misc)",
+);
+
+const normalizeTag = (tag: string) => tag.trim().toLowerCase();
+const flattenArticleTags = (post: Props) => {
+  const tags: string[] = post.frontmatter.tag || [];
+  return [
+    ...new Set(
+      tags
+        .filter((tag) => tag?.trim() /* exclude empty-falsy */)
+        .map(normalizeTag),
+    ),
+  ].map((tag) => {
+    return { ...post, tag };
+  });
+};
+const groupedByTags = Map.groupBy(
+  renderPosts.flatMap(flattenArticleTags),
+  (p) => p.tag || "(Misc)",
+);
+---
+
+<CommonLayout>
+  <!-- ══════════════ ARTICLE LIST PAGE ══════════════ -->
+  <div class="center-title">
+    <h1>Astro with SveltiaCMS</h1>
+    {import.meta.env.DEV && <a href="/blog/cms">Go to CMS</a>}
+  </div>
+
+  <section class="article-wrap" style="max-width: 800px;">
+    <div class="section-label">
+      <h1>Blog Posts</h1>
+      <ul style="padding-left: 2rem;">
+        {
+          sortedDatePosts.map(({ id, frontmatter: post }) => (
+            <li>
+              <a href={`/blog/${id}`}>
+                {post.title} &mdash;{" "}
+                {shortDateFormatter.format(post.created_at)}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="section-divider"><hr /></div>
+    <div class="section-label">
+      <h1>By Authors</h1>
+      <ul style="padding-left: 2rem;">
+        {
+          [...groupedByAuthors.keys()].map((key) => {
+            let name = <div>{key}</div>;
+            let articles = sortDateDesc(groupedByAuthors.get(key)).map(
+              ({ id, frontmatter: post, author }) => (
+                <li>
+                  <a href={`/blog/${id}`}>
+                    {post.title} &mdash;{" "}
+                    {shortDateFormatter.format(post.created_at)}
+                  </a>
+                </li>
+              ),
+            );
+            return (
+              <li>
+                {name}
+                <ul style="padding-left: 2rem;">{articles}</ul>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+    <div class="section-divider"><hr /></div>
+    <div class="section-label">
+      <h1>By Topic</h1>
+      <ul style="padding-left: 2rem;">
+        {
+          [...groupedByTopic.keys()].map((key) => {
+            let name = <div>{key}</div>;
+            let articles = sortDateDesc(groupedByTopic.get(key)).map(
+              ({ id, frontmatter: post, author }) => (
+                <li>
+                  <a href={`/blog/${id}`}>
+                    {post.title} &mdash;{" "}
+                    {shortDateFormatter.format(post.created_at)}
+                  </a>
+                </li>
+              ),
+            );
+            return (
+              <li>
+                {name}
+                <ul style="padding-left: 2rem;">{articles}</ul>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+    <div class="section-divider"><hr /></div>
+    <div class="section-label">
+      <h1>By Tag</h1>
+      <ul style="padding-left: 2rem;">
+        {
+          [...groupedByTags.keys()].map((key) => {
+            let name = <div>{key}</div>;
+            let articles = sortDateDesc(groupedByTags.get(key)).map(
+              ({ id, frontmatter: post, author }) => (
+                <li>
+                  <a href={`/blog/${id}`}>
+                    {post.title} &mdash;{" "}
+                    {shortDateFormatter.format(post.created_at)}
+                  </a>
+                </li>
+              ),
+            );
+            return (
+              <li>
+                {name}
+                <ul style="padding-left: 2rem;">{articles}</ul>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+  </section>
+</CommonLayout>

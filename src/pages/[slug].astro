@@ -1,0 +1,94 @@
+---
+/// <reference path="../../.astro/content.d.ts" />
+//@ts-check
+import { type CollectionEntry, getCollection, render } from "astro:content";
+
+import CommonLayout from "../layouts/Common.astro";
+import { getInitials } from '../static/script.mjs';
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts
+    .map((post) => ({
+      params: { slug: post.id },
+      props: post,
+    }));
+}
+type Props = CollectionEntry<"posts"> & { frontmatter: any };
+
+const post = Astro.props;
+const { Content, remarkPluginFrontmatter } = await render(post);
+post.frontmatter = remarkPluginFrontmatter
+const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
+const fullDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium', timeStyle: "short" });
+const createdDate = post.frontmatter.created_at
+const modifiedDate = post.frontmatter.updated_at
+
+const author = post.data.author || post.frontmatter.author
+const category = post.frontmatter.category || "";
+const categoryLink = "/blog/category/" + (category || "misc");
+const tags = post.frontmatter.tags || [];
+const thumbnail = post.frontmatter.thumbnail?.src || post.frontmatter.thumbnail;
+const thumbnailStyle = !!thumbnail ? `--bg-image: url(${thumbnail})` : 'display: none;'
+---
+
+<CommonLayout title={post.frontmatter.title}>
+  <!-- ══════════════ ARTICLE PAGE ══════════════ -->
+  <div class="page-article">
+    { !import.meta.env.DEV && post.frontmatter.draft 
+    ?
+    <div class="center-title">
+      <div class="hero">
+        <h1>Nothing to see here.</h1>
+        <div class="hero-eyebrow">404 Not Found</div> 
+      </div>
+      <a class="tab-btn active" onclick="history.back();">← Go back</a>
+    </div>
+    : 
+    <div class="article-thumbnails" style={thumbnailStyle}></div>
+    <div class="article-wrap">
+      <div class:list={["article-header", { "article-draft": post.frontmatter.draft }]}>
+        <div class="breadcrumb">
+          <a href="#">Articles</a>
+          <span>/</span>
+          <a href={categoryLink}>{category || '(Misc)'}</a>
+          <span>/</span>
+          <span>{post.frontmatter.title}</span>
+        </div>
+
+
+        <a href="#" class="post-category">{category || 'Miscellaneous'}</a>
+
+        <h1>{post.frontmatter.title}</h1>
+      </div>
+
+      <div class="article-byline">
+        <div class="byline-avatar">{getInitials(author)}</div>
+        <div class="byline-info">
+          <div title={post.frontmatter.email} class="byline-name" >{author}</div>
+          <div class="byline-date">
+            <time title={createdDate}>{shortDateFormatter.format(createdDate)}</time>
+            { 
+            (modifiedDate > createdDate) && 
+            <time title={modifiedDate || createdDate}><em>(Updated: {fullDateFormatter.format(modifiedDate || createdDate)})</em></time>
+            }
+          </div>
+        </div>
+        <div class="byline-reading">{post.frontmatter.minutesRead}</div>
+      </div>
+
+      <div class="article-body">
+        <Content />
+      </div>
+
+      {tags.length > 0 && (
+        <div class="tag-list">
+          {tags.map((tag: string) => (
+            <a href={`/topics/${tag.toLowerCase()}`} class="tag">{tag}</a>
+          ))}
+        </div>
+      )}
+    </div>
+    }
+  </div>
+</CommonLayout>
