@@ -11,6 +11,7 @@ import { remarkDescription } from './src/plugins/markdown_autodescription.mjs';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://channnnnn.github.io/',
   base: '/blog',
   outDir: 'public',
   publicDir: 'src/static',
@@ -44,12 +45,12 @@ export default defineConfig({
     sveltia({
       // Find docs here https://sveltiacms.app/llms.txt
       route: "/cms",
-      title: "My Custom CMS",
+      title: "Git-CMS with Sveltia",
       config: {
         backend: {
           name: "github",
           repo: "Channnnnn/git-cms",
-          branch: "master",
+          branch: "gh-pages-classic",
         },
 
         media_folder: "media",
