@@ -26,7 +26,7 @@ const modifiedDate = post.frontmatter.updated_at
 
 const author = post.data.author || post.frontmatter.author
 const category = post.frontmatter.category || "";
-const categoryLink = "/blog/category/" + (category || "misc");
+const categoryLink = "/category/" + (category || "misc");
 const tags = post.frontmatter.tags || [];
 const thumbnail = post.frontmatter.thumbnail?.src || post.frontmatter.thumbnail;
 const thumbnailStyle = !!thumbnail ? `--bg-image: url(${thumbnail})` : 'display: none;'

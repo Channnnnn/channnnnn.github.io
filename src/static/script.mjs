@@ -17,3 +17,5 @@ export const getInitials = (fullName) => {
     return 'Ø'
   }
 }
+
+export const slugify = (str) => str.toLowerCase().trim().replace(/\s+/g, '-');

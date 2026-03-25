@@ -15,27 +15,6 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
     <style slot="head-style">
       /* ── UPLOAD SCREEN ── */
 
-      .upload-eyebrow {
-        font-size: 0.7rem;
-        font-weight: 500;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-      }
-      .upload-eyebrow::before,
-      .upload-eyebrow::after {
-        content: "";
-        display: inline-block;
-        width: 20px;
-        height: 1px;
-        background: var(--accent);
-      }
-
       #upload-screen h1 {
         font-family: var(--serif);
         font-size: 2rem;
@@ -339,7 +318,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
 
     <!-- ══════════════ UPLOAD SCREEN ══════════════ -->
     <div id="upload-screen" class="center-title">
-      <div class="upload-eyebrow">Post Preview</div>
+      <div class="center-eyebrow">Post Preview</div>
       <h1>Preview your post</h1>
       <p>
         Upload any Markdown file. Frontmatter is parsed automatically and code
@@ -385,7 +364,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
     </div>
 
     <!-- ══════════════ PREVIEW SCREEN ══════════════ -->
-    <div id="preview-screen" style="display: unset;">
+    <div id="preview-screen">
       <div class="preview-toolbar">
         <div class="preview-toolbar-left">
           <button class="btn-back" id="btn-back"> ← Back </button>
@@ -434,7 +413,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
       import { transformerNotationDiff, transformerNotationHighlight } from "https://esm.sh/@shikijs/transformers";
       import { transformerCopyButton } from 'https://esm.sh/@selemondev/shiki-transformer-copy-button'
       import { marked } from "https://esm.sh/marked@12";
-      import { getInitials } from '/blog/script.mjs';
+      import { getInitials } from '/script.mjs';
 
       // ── STATE ──
       let selectedFile = null;

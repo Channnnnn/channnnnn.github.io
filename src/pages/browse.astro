@@ -2,6 +2,8 @@
 import { type CollectionEntry, getCollection, render } from "astro:content";
 
 import CommonLayout from "../layouts/Common.astro";
+import { slugify } from '../static/script.mjs';
+
 type Props = CollectionEntry<"posts"> & {
   frontmatter: Record<string, any>;
   author: string;
@@ -37,7 +39,7 @@ const groupedByTopic = Map.groupBy(
 
 const normalizeTag = (tag: string) => tag.trim().toLowerCase();
 const flattenArticleTags = (post: Props) => {
-  const tags: string[] = post.frontmatter.tag || [];
+  const tags: string[] = post.frontmatter.tags || [];
   return [
     ...new Set(
       tags
@@ -58,7 +60,7 @@ const groupedByTags = Map.groupBy(
   <!-- ══════════════ ARTICLE LIST PAGE ══════════════ -->
   <div class="center-title">
     <h1>Astro with SveltiaCMS</h1>
-    {import.meta.env.DEV && <a href="/blog/cms">Go to CMS</a>}
+    {import.meta.env.DEV && <a href="/cms">Go to CMS</a>}
   </div>
 
   <section class="article-wrap" style="max-width: 800px;">
@@ -68,7 +70,7 @@ const groupedByTags = Map.groupBy(
         {
           sortedDatePosts.map(({ id, frontmatter: post }) => (
             <li>
-              <a href={`/blog/${id}`}>
+              <a href={`/${id}`}>
                 {post.title} &mdash;{" "}
                 {shortDateFormatter.format(post.created_at)}
               </a>
@@ -87,7 +89,7 @@ const groupedByTags = Map.groupBy(
             let articles = sortDateDesc(groupedByAuthors.get(key)).map(
               ({ id, frontmatter: post, author }) => (
                 <li>
-                  <a href={`/blog/${id}`}>
+                  <a href={`/${id}`}>
                     {post.title} &mdash;{" "}
                     {shortDateFormatter.format(post.created_at)}
                   </a>
@@ -110,11 +112,11 @@ const groupedByTags = Map.groupBy(
       <ul style="padding-left: 2rem;">
         {
           [...groupedByTopic.keys()].map((key) => {
-            let name = <div>{key}</div>;
+            let name = <a href={`/category/${slugify(key)}`}><h3 style="font-family: var(--sans); color: var(--text);">{key}</h3></a>;
             let articles = sortDateDesc(groupedByTopic.get(key)).map(
               ({ id, frontmatter: post, author }) => (
                 <li>
-                  <a href={`/blog/${id}`}>
+                  <a href={`/${id}`}>
                     {post.title} &mdash;{" "}
                     {shortDateFormatter.format(post.created_at)}
                   </a>
@@ -122,7 +124,7 @@ const groupedByTags = Map.groupBy(
               ),
             );
             return (
-              <li>
+              <li style="list-style: none; margin-bottom: 0.75rem;">
                 {name}
                 <ul style="padding-left: 2rem;">{articles}</ul>
               </li>
@@ -132,7 +134,7 @@ const groupedByTags = Map.groupBy(
       </ul>
     </div>
     <div class="section-divider"><hr /></div>
-    <div class="section-label">
+    <div class="section-label" style="align-items: unset;">
       <h1>By Tag</h1>
       <ul style="padding-left: 2rem;">
         {
@@ -141,7 +143,7 @@ const groupedByTags = Map.groupBy(
             let articles = sortDateDesc(groupedByTags.get(key)).map(
               ({ id, frontmatter: post, author }) => (
                 <li>
-                  <a href={`/blog/${id}`}>
+                  <a href={`/${id}`}>
                     {post.title} &mdash;{" "}
                     {shortDateFormatter.format(post.created_at)}
                   </a>

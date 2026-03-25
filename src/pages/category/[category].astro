@@ -1,0 +1,94 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content"
+
+import Card from "../../components/Card.astro";
+import CommonLayout from "../../layouts/Common.astro";
+import { getInitials, slugify } from '../../static/script.mjs';
+
+type PostCollectionEntry = CollectionEntry<"posts"> & { frontmatter: Record<string, any> };
+type Props = { posts: PostCollectionEntry[] }
+
+export async function getStaticPaths() {
+  console.log('categories')
+
+  const posts: PostCollectionEntry[] = await getCollection('posts');
+  for (const post of posts) {
+    const { remarkPluginFrontmatter } = await render(post);
+    post.frontmatter = remarkPluginFrontmatter;
+  }
+  const renderPosts = import.meta.env.DEV 
+    ? posts
+    : posts.filter(({frontmatter}) => !frontmatter.draft)
+  
+  const categories = [...new Set(
+    renderPosts
+    .map(post => post.frontmatter.category)
+    .filter(Boolean)
+  )];
+  console.log(categories)
+
+  return categories.map(category => ({
+    params: { category: slugify(category) },
+    props:  { category, posts: renderPosts.filter(p => slugify(p.data.category) === slugify(category)) },
+  }));
+}
+
+const { category } = Astro.params
+const { posts } = Astro.props
+
+const sortedPosts = posts.sort(({frontmatter: post1}, {frontmatter: post2}) => 
+	  new Date(post1.created_at) > new Date(post2.created_at) ? -1 
+	: new Date(post1.created_at) < new Date(post2.created_at) ? 1 
+	: 0)
+const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
+const [latestArticle, ...recentArticles] = sortedPosts
+const latestAuthor = latestArticle.data.author || latestArticle.frontmatter.author
+
+const latestArticleExcerpt = latestArticle.frontmatter.description.length > 175 ? latestArticle.frontmatter.description.slice(0,175) + "..." : latestArticle.frontmatter.description
+const latestArticleReadMore = latestArticleExcerpt.length < 30 ? 'Say what?'
+: latestArticleExcerpt.length > 150 ? 'Continue reading'
+: 'Read article'
+---
+
+<CommonLayout>
+	<!-- ══════════════ ARTICLE LIST PAGE ══════════════ -->
+	<section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Latest Article · {category}</div>
+      <h1>{latestArticle.frontmatter.title}</h1>
+      <div class="hero-meta">
+        <div class="author-avatar">{getInitials(latestAuthor)}</div>
+        <span>{latestAuthor}</span>
+        <span>·</span>
+        <span>{shortDateFormatter.format(latestArticle.frontmatter.created_at)}</span>
+        <span>·</span>
+        <span>{latestArticle.frontmatter.minutesRead}</span>
+      </div>
+      <p class="hero-excerpt">
+        {latestArticleExcerpt}
+      </p>
+      <a href={'/' + latestArticle.id} class="btn-read">
+        {latestArticleReadMore}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+    { latestArticle.frontmatter.thumbnail
+      ?
+      <div class="hero-image">
+        <img src={latestArticle.frontmatter.thumbnail?.src || latestArticle.frontmatter.thumbnail} onerror="this.style.display='none'" />
+      </div>
+      : 
+      <div class="hero-decoration">
+        {/* TODO: Add static image of category */}
+      </div>
+    }
+  </section>
+
+	<div class="section-divider"><hr></div>
+
+  <div class="post-grid">
+		{recentArticles.map(post => <Card {...post} />)}
+  </div>
+</CommonLayout>

@@ -1,5 +1,5 @@
 ---
-const post = Astro.props;
+const { post, omitCategory } = Astro.props;
 post.frontmatter = post.rendered.metadata.frontmatter
 
 const shortDateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle:'medium' });
@@ -12,28 +12,30 @@ const thumbnail = post.frontmatter.thumbnail?.src || post.frontmatter.thumbnail;
 ---
 
 <article class="post-card">
-  <div class="post-thumb">
-    { thumbnail
-    ?
-    <img src={thumbnail} onerror="this.style.display='none'" />
-    :
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <rect x="2" y="2" width="24" height="24"rx="2" stroke="currentColor"stroke-width="1.2"></rect>
-      <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.2"></circle>
-      <path d="M2 18l6-4 4 3 4-5 6 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-    </svg>
-    }
-  </div>
-  <a href={'blog/' + post.id} class="post-category">{category}</a>
-  <h3>
-    <a href={'blog/' + post.id}>{post.frontmatter.title}</a>
-  </h3>
-  <p class="post-snippet">
-    {articleExcerpt}
-  </p>
-  <div class="post-meta">
-    <span>{author}</span>
-    <span>{shortDateFormatter.format(createdDate)}</span>
-    <span>{post.frontmatter.minutesRead}</span>
-  </div>
+  <a href={'/' + post.id}>
+    <div class="post-thumb">
+      { thumbnail
+      ?
+      <img src={thumbnail} onerror="this.style.display='none'" />
+      :
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="2" width="24" height="24"rx="2" stroke="currentColor"stroke-width="1.2"></rect>
+        <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.2"></circle>
+        <path d="M2 18l6-4 4 3 4-5 6 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      }
+    </div>
+    { !omitCategory && <a class="post-category">{category}</a> }
+    <h3>
+      <a href={'/' + post.id}>{post.frontmatter.title}</a>
+    </h3>
+    <p class="post-snippet">
+      {articleExcerpt}
+    </p>
+    <div class="post-meta">
+      <span>{author}</span>
+      <span>{shortDateFormatter.format(createdDate)}</span>
+      <span>{post.frontmatter.minutesRead}</span>
+    </div>
+  </a>
 </article>

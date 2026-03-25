@@ -12,7 +12,6 @@ import { remarkDescription } from './src/plugins/markdown_autodescription.mjs';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://channnnnn.github.io/',
-  base: '/blog',
   outDir: 'public',
   publicDir: 'src/static',
   image: {
@@ -59,7 +58,7 @@ export default defineConfig({
           {
             name: "posts",
             label: "Posts",
-            folder: "blog", // /blog
+            folder: "blog",
             create: true,
             sortable_fields: ["title", "created_at", "updated_at"],
             preview_path: "blog/{{slug}}/",

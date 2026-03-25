@@ -47,7 +47,7 @@ const latestArticleReadMore = latestArticleExcerpt.length < 30 ? 'Say what?'
       <p class="hero-excerpt">
         {latestArticleExcerpt}
       </p>
-      <a href={'blog/' + latestArticle.id} class="btn-read">
+      <a href={'/' + latestArticle.id} class="btn-read">
         {latestArticleReadMore}
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -71,11 +71,11 @@ const latestArticleReadMore = latestArticleExcerpt.length < 30 ? 'Say what?'
 	<!-- RECENT POSTS -->
   <div class="section-label">
     <h2>Recent articles</h2>
-    <a href="#">View all →</a>
+    <a href="/browse">View all →</a>
   </div>
 
 	<div class="post-grid">
-		{recentArticles.map(post => <Card {...post} />)}
+		{recentArticles.map(post => <Card post={post} />)}
   </div>
 
 	<div class="section-divider"><hr></div>
@@ -127,8 +127,8 @@ const latestArticleReadMore = latestArticleExcerpt.length < 30 ? 'Say what?'
       <div>
 				<p style="margin-bottom: 1rem">Your recent findings, Lesson learned, Cool tricks. Anything worth sharing.</p>
 				<div class="contribution-form">
-					<a class="tab-btn contribute" href="/blog/contribute">Contribute</a>
-					<a class="tab-btn" href="/blog/dev-notes/contribution-guide">How to</a>
+					<a class="tab-btn contribute" href="/contribute">Contribute</a>
+					<a class="tab-btn" href="/dev-notes/contribution-guide">How to</a>
 				</div>
 			</div>
     </div>

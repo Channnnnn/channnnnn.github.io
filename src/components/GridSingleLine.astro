@@ -1,0 +1,15 @@
+---
+import { slugify } from '../static/script.mjs';
+
+const { key } = Astro.props
+---
+<>
+<div class="section-label" style="justify-content: unset; align-items: unset; gap: 2rem;">
+    <h1>{key}</h1>
+    <a style="font-size: 1rem;" href={`/category/${slugify(key)}`}>View all →</a>
+</div>
+<div class="post-grid">
+    <slot/>
+</div>
+<div class="section-divider"><hr/></div>
+</>

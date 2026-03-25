@@ -1,0 +1,43 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content"
+
+import Card from "../components/Card.astro";
+import GridSingleLine from "../components/GridSingleLine.astro";
+import CommonLayout from "../layouts/Common.astro";
+
+type PostCollectionEntry = CollectionEntry<"posts"> & { frontmatter: Record<string, any> };
+type Props = { categories: Map<string, PostCollectionEntry[]> }
+
+const posts: PostCollectionEntry[] = await getCollection('posts');
+for (const post of posts) {
+  const { remarkPluginFrontmatter } = await render(post);
+  post.frontmatter = remarkPluginFrontmatter;
+}
+const renderPosts = import.meta.env.DEV 
+  ? posts
+  : posts.filter(({frontmatter}) => !frontmatter.draft)
+
+const categories = Map.groupBy(
+  renderPosts,
+  post => post.frontmatter.category);
+
+const categoryEntriesSorted = [...categories.entries()].map(([key, posts]) => {
+    const sortedPosts = posts.sort(({frontmatter: post1}, {frontmatter: post2}) => 
+        new Date(post1.created_at) > new Date(post2.created_at) ? -1 
+      : new Date(post1.created_at) < new Date(post2.created_at) ? 1 
+      : 0);
+    return { key, posts: sortedPosts }
+});
+---
+
+<CommonLayout>
+  <section class="center-title" style="padding-bottom: 1rem;">
+    <div class="center-eyebrow">Articles by topics</div>
+    <h1>What are you interested in?</h1>
+  </section> 
+	{categoryEntriesSorted.map(category =>
+    <GridSingleLine key={category.key}>
+      {category.posts.map(post => (<Card post={post} omitCategory={true} />))}
+    </GridSingleLine>
+  )}
+</CommonLayout>
