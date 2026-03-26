@@ -4,7 +4,7 @@
 import { type CollectionEntry, getCollection, render } from "astro:content";
 
 import CommonLayout from "../layouts/Common.astro";
-import { getInitials } from '../static/script.mjs';
+import { getInitials, slugify } from '../static/script.mjs';
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -26,7 +26,7 @@ const modifiedDate = post.frontmatter.updated_at
 
 const author = post.data.author || post.frontmatter.author
 const category = post.frontmatter.category || "";
-const categoryLink = "/category/" + (category || "misc");
+const categoryLink = "/category/" + slugify(category || "misc");
 const tags = post.frontmatter.tags || [];
 const thumbnail = post.frontmatter.thumbnail?.src || post.frontmatter.thumbnail;
 const thumbnailStyle = !!thumbnail ? `--bg-image: url(${thumbnail})` : 'display: none;'
@@ -84,7 +84,7 @@ const thumbnailStyle = !!thumbnail ? `--bg-image: url(${thumbnail})` : 'display:
       {tags.length > 0 && (
         <div class="tag-list">
           {tags.map((tag: string) => (
-            <a href={`/topics/${tag.toLowerCase()}`} class="tag">{tag}</a>
+            <a href={`/topics/${slugify(tag)}`} class="tag">{tag}</a>
           ))}
         </div>
       )}
